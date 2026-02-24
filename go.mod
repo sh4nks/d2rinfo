@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/alecthomas/kong v1.14.0
 	github.com/go-chi/chi/v5 v5.2.5
-	github.com/maypok86/otter/v2 v2.3.0
 	github.com/go-chi/httprate v0.15.0
+	github.com/maypok86/otter/v2 v2.3.0
 )
 
 require (
