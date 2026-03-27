@@ -9,24 +9,29 @@ import (
 // FixedIntervalExpiry is a concrete implementation of otter.ExpiryCalculator.
 type FixedIntervalExpiry struct{}
 
-// ExpireAfterCreate calculates a TTL to expire at the next 30-minute mark.
+// ExpireAfterCreate calculates a TTL to expire at the next boundary:
+// - If created between :00 and :10, expires at :10.
+// - If created between :10 and :30, expires at :30.
+// - If created between :30 and :40, expires at :40.
+// - If created between :40 and :00, expires at :00 of the next hour.
 func (e FixedIntervalExpiry) ExpireAfterCreate(entry otter.Entry[string, any]) time.Duration {
 	now := time.Now()
 	minute := now.Minute()
 	var nextBoundary time.Time
 
-	if minute < 30 {
-		// If current minute is before :30, the next boundary is :30 of the current hour.
+	if minute < 10 {
+		nextBoundary = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 10, 0, 0, now.Location())
+	} else if minute < 30 {
 		nextBoundary = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 30, 0, 0, now.Location())
+	} else if minute < 40 {
+		nextBoundary = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 40, 0, 0, now.Location())
 	} else {
-		// If current minute is :30 or after, the next boundary is :00 of the next hour.
 		nextBoundary = time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location())
 	}
 
 	ttl := nextBoundary.Sub(now)
 	if ttl <= 0 {
-		nextBoundary = nextBoundary.Add(30 * time.Minute)
-		ttl = nextBoundary.Sub(now)
+		return time.Minute
 	}
 	return ttl
 }
