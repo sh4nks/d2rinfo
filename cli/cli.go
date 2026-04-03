@@ -4,6 +4,7 @@ import (
 	"d2rinfo/config"
 	"d2rinfo/server"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -22,7 +23,10 @@ type ServerCmd struct {
 func (s *ServerCmd) Run() error {
 	var cfg *config.Config
 	if s.ConfigFile != "" {
+		log.Printf("Using config file: %s\n", s.ConfigFile)
 		cfg = config.LoadConfig(s.ConfigFile)
+	} else {
+		cfg = &config.Config{}
 	}
 	if s.Host != "" {
 		cfg.Host = s.Host
