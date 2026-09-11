@@ -27,6 +27,7 @@ func LoadConfig(path string) *Config {
 	jsonFile, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
+		return &config
 	}
 	defer jsonFile.Close()
 

@@ -1,0 +1,17 @@
+[Unit]
+Description=d2rinfo
+After=syslog.target
+After=network.target
+
+[Service]
+RestartSec=2s
+Type=simple
+User=apps
+Group=apps
+WorkingDirectory=/home/apps
+ExecStart=/home/apps/d2rinfo server -c /home/apps/d2rinfo/config.json
+Restart=always
+Environment=USER=apps HOME=/home/apps/d2rinfo
+
+[Install]
+WantedBy=multi-user.target

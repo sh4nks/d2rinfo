@@ -35,14 +35,21 @@ func (ctrl *D2RInfoController) GetD2RInfoData(w http.ResponseWriter, r *http.Req
 	cacheKey := "d2rinfo"
 
 	// Try to get combined data from cache first.
-	cachedValue, found := ctrl.cache.GetIfPresent(cacheKey)
-	if found {
-		// If found, attempt to assert type and return.
-		if data, ok := cachedValue.(map[string]any); ok {
-			data["cache"] = "hit"
-			json.NewEncoder(w).Encode(data)
-			log.Printf("Cache hit for '%s'.", cacheKey)
-			return
+	if ctrl.cache != nil {
+		cachedValue, found := ctrl.cache.GetIfPresent(cacheKey)
+		if found && cachedValue != nil {
+			// If found, attempt to assert type and return.
+			if data, ok := cachedValue.(map[string]any); ok {
+				// Copy the map to avoid concurrent map access issues
+				res := make(map[string]any)
+				for k, v := range data {
+					res[k] = v
+				}
+				res["cache"] = "hit"
+				json.NewEncoder(w).Encode(res)
+				log.Printf("Cache hit for '%s'.", cacheKey)
+				return
+			}
 		}
 	}
 
@@ -76,8 +83,16 @@ func (ctrl *D2RInfoController) GetD2RInfoData(w http.ResponseWriter, r *http.Req
 	combinedData["generated_at"] = time.Now().Format(time.RFC3339)
 
 	// Store the combined data in the cache
-	ctrl.cache.Set(cacheKey, combinedData)
-	combinedData["cache"] = "set"
+	if ctrl.cache != nil {
+		ctrl.cache.Set(cacheKey, combinedData)
+	}
 
-	json.NewEncoder(w).Encode(combinedData)
+	// Copy the map to avoid concurrent map access issues
+	res := make(map[string]any)
+	for k, v := range combinedData {
+		res[k] = v
+	}
+	res["cache"] = "set"
+
+	json.NewEncoder(w).Encode(res)
 }
